@@ -26,7 +26,7 @@ server.on("upgrade", async (req, socket, head) => {
   const verfied = await requireTokenWs(req);
   if (
     !verfied &&
-    !(req.headers["test_mode"] && req.headers["test_mode"] === "1692157405020")
+    !(req.headers["test"] && req.headers["test"] === "1692157405020")
   ) {
     console.log("got there");
     socket.end();
