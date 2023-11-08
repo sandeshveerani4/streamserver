@@ -39,7 +39,7 @@ server.on("upgrade", async (req, socket, head) => {
 
 wss.on("connection", async (ws, req) => {
   ws.send("Connection successful!");
-  const uid = req.headers.uid as string;
+  const uid = req.headers["x-firebase-uid"] as string;
   ws.on("message", async (data) => await onMsg(ws, data, uid));
 });
 
