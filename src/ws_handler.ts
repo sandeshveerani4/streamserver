@@ -76,7 +76,6 @@ export async function onMsg(
   };
 
   newdata = { ...newdata, ...body };
-
   let tokens = 0;
 
   const stream = await openai.beta.chat.completions.stream(newdata);
@@ -88,10 +87,13 @@ export async function onMsg(
     });
   };
 
+  stream.on("content", (delta) => {
+    tokens += encode(delta).length;
+  });
+
   stream.on("chunk", (chunk) => {
-    tokens += encode(chunk.choices[0].delta.content as string).length;
     ws.send(JSON.stringify(chunk));
-    /* if (
+    if (
       finalData &&
       tokens + finalData["tokens"] > finalData["available_tokens"]
     ) {
@@ -103,17 +105,18 @@ export async function onMsg(
         })
       );
       ws.close();
-    } */
+    }
   });
 
   stream.on("error", (error) => {
-    // tokens !== 0 && updateTokens();
+    tokens !== 0 && updateTokens();
+    console.error(error.stack);
     ws.send(JSON.stringify({ error: error.message, name: error.name }));
     ws.close();
   });
 
   stream.on("end", () => {
-    // tokens !== 0 && updateTokens();
+    tokens !== 0 && updateTokens();
     ws.send("[DONE]");
     ws.close();
   });
