@@ -5,25 +5,10 @@ import { encode } from "gpt-3-encoder";
 import OpenAI from "openai";
 import { ChatCompletionMessage } from "openai/resources";
 
-export async function onMsg(
-  ws: WebSocket,
-  message: RawData,
-  uid: string,
-  openai: OpenAI
-) {
-  const body = JSON.parse(message as unknown as string);
-  const document = admin.firestore().collection("users").doc(uid);
-  const dbResults = await document.get();
-  let finalData = dbResults.data();
-  const currentTimeStamp = admin.firestore.Timestamp.now();
-  if (!finalData) {
-    ws.send(
-      JSON.stringify({
-        error: "User not Found!",
-      })
-    );
-    return ws.close();
-  }
+const handleOldUsers = async (
+  document: admin.firestore.DocumentReference<admin.firestore.DocumentData>,
+  finalData: admin.firestore.DocumentData
+) => {
   if (!finalData["renewed"]) {
     const newTimeStamp = admin.firestore.Timestamp.fromDate(
       new Date(2022, 11, 24)
@@ -42,6 +27,32 @@ export async function onMsg(
     });
     finalData["availableTokens"] = availableTokens;
   }
+};
+
+export async function onMsg(
+  ws: WebSocket,
+  message: RawData,
+  uid: string,
+  openai: OpenAI
+) {
+  const body: OpenAI.ChatCompletionCreateParamsStreaming = JSON.parse(
+    message as unknown as string
+  );
+  const document = admin.firestore().collection("users").doc(uid);
+  const dbResults = await document.get();
+  let finalData = dbResults.data();
+  const currentTimeStamp = admin.firestore.Timestamp.now();
+  if (finalData === undefined) {
+    ws.send(
+      JSON.stringify({
+        error: "User not Found!",
+      })
+    );
+    return ws.close();
+  }
+
+  handleOldUsers(document, finalData);
+
   if (finalData["tokens"] >= finalData["availableTokens"]) {
     ws.send(
       JSON.stringify({
@@ -52,8 +63,8 @@ export async function onMsg(
     return ws.close();
   }
 
-  let newdata: OpenAI.Chat.ChatCompletionCreateParams = {
-    max_tokens: parseInt(body["max_tokens"]),
+  let newdata: OpenAI.Chat.ChatCompletionCreateParamsStreaming = {
+    max_tokens: body["max_tokens"],
     model: "gpt-3.5-turbo",
     messages: [] as ChatCompletionMessage[],
     n: 1,
@@ -64,42 +75,45 @@ export async function onMsg(
     stream: true,
   };
 
-  if (newdata["max_tokens"] && newdata["max_tokens"] >= 1200) {
-    newdata["max_tokens"] = 1200;
-  }
-  if (body?.prompt) {
-    newdata["messages"] = [
-      ...newdata.messages,
-      { role: "user", content: body.prompt },
-    ];
-  } else {
-    if (newdata["messages"][0]?.role !== "system") {
-      newdata.messages = [
-        {
-          role: "system",
-          content:
-            "You are a helpful assistant named 'AiFy'." +
-            ((body?.modeDetail ?? "") + (body?.sentiment ?? "")),
-        },
-      ];
-    }
-    newdata["messages"] = [...newdata.messages, ...body?.messages];
-  }
+  newdata = { ...newdata, ...body };
+
+  let tokens = 0;
+
   const stream = await openai.beta.chat.completions.stream(newdata);
-  stream.on("chunk", (chunk) => {
-    ws.send(JSON.stringify(chunk));
-  });
-  stream.on("totalUsage", (usage) => {
+
+  const updateTokens = () => {
     document.update({
-      tokens: usage.total_tokens,
+      tokens: tokens,
       lastTokensUsed: currentTimeStamp,
     });
+  };
+
+  stream.on("chunk", (chunk) => {
+    tokens += encode(chunk.choices[0].delta.content as string).length;
+    ws.send(JSON.stringify(chunk));
+    if (
+      finalData &&
+      tokens + finalData["tokens"] > finalData["available_tokens"]
+    ) {
+      stream.abort();
+      ws.send(
+        JSON.stringify({
+          error:
+            "Tokens limit exceeded. Upgrade to PRO or Subscribe to higher Plan to continue using AiFy!",
+        })
+      );
+      ws.close();
+    }
   });
+
   stream.on("error", (error) => {
+    tokens !== 0 && updateTokens();
     ws.send(JSON.stringify({ error: error.message, name: error.name }));
     ws.close();
   });
+
   stream.on("end", () => {
+    tokens !== 0 && updateTokens();
     ws.send("[DONE]");
     ws.close();
   });
