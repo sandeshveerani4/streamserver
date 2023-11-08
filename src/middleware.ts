@@ -2,8 +2,8 @@ import admin from "firebase-admin";
 import { IncomingMessage } from "http";
 
 export const requireTokenWs = async (req: IncomingMessage) => {
-  const uid = req.headers["uid"];
-  const userToken = req.headers["token"];
+  const uid = req.headers["x-firebase-uid"];
+  const userToken = req.headers["x-firebase-token"];
   if (!uid || !userToken) {
     return false;
   }
