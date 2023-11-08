@@ -6,7 +6,10 @@ import { createServer } from "http";
 import { onMsg } from "./ws_handler";
 import { requireTokenWs } from "./middleware";
 import "dotenv/config";
-
+import OpenAI from "openai";
+const openai = new OpenAI({
+  apiKey: process.env["PAID_API"],
+});
 admin.initializeApp({
   credential: admin.credential.cert({
     projectId: "textaify-5d7b6",
@@ -40,7 +43,7 @@ server.on("upgrade", async (req, socket, head) => {
 wss.on("connection", async (ws, req) => {
   ws.send("Connection successful!");
   const uid = req.headers["x-firebase-uid"] as string;
-  ws.on("message", async (data) => await onMsg(ws, data, uid));
+  ws.on("message", async (data) => await onMsg(ws, data, uid, openai));
 });
 
 const port = process.env.PORT || 8080;
