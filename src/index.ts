@@ -7,9 +7,13 @@ import { onMsg } from "./ws_handler";
 import { requireTokenWs } from "./middleware";
 import "dotenv/config";
 import OpenAI from "openai";
+import ocr from "./routes/ocr";
+import fileUpload from "express-fileupload";
+
 const openai = new OpenAI({
   apiKey: process.env["PAID_API"],
 });
+
 admin.initializeApp({
   credential: admin.credential.cert({
     projectId: "textaify-5d7b6",
@@ -17,14 +21,20 @@ admin.initializeApp({
     clientEmail: process.env["FIREBASE_CLIENT_EMAIL"],
   }),
 });
+
 const app = express();
+
 app.use(cors());
+app.use(express.json());
+app.use(fileUpload({ useTempFiles: false }));
+
+app.get("/", (req, res) => {
+  return res.json({ sucess: true });
+});
+app.use("/ocr", ocr);
+
 const server = createServer(app);
 const wss = new WebSocketServer({ noServer: true });
-app.get("/", (req, res) => {
-  res.send("Hello World");
-});
-
 server.on("upgrade", async (req, socket, head) => {
   const verfied = await requireTokenWs(req);
   if (

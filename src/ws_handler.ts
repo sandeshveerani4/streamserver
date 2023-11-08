@@ -35,7 +35,7 @@ export async function onMsg(
   uid: string,
   openai: OpenAI
 ) {
-  const body: OpenAI.ChatCompletionCreateParamsStreaming = JSON.parse(
+  const body: OpenAI.Chat.ChatCompletionCreateParamsStreaming = JSON.parse(
     message as unknown as string
   );
   const document = admin.firestore().collection("users").doc(uid);
@@ -91,7 +91,7 @@ export async function onMsg(
   stream.on("chunk", (chunk) => {
     tokens += encode(chunk.choices[0].delta.content as string).length;
     ws.send(JSON.stringify(chunk));
-    if (
+    /* if (
       finalData &&
       tokens + finalData["tokens"] > finalData["available_tokens"]
     ) {
@@ -103,17 +103,17 @@ export async function onMsg(
         })
       );
       ws.close();
-    }
+    } */
   });
 
   stream.on("error", (error) => {
-    tokens !== 0 && updateTokens();
+    // tokens !== 0 && updateTokens();
     ws.send(JSON.stringify({ error: error.message, name: error.name }));
     ws.close();
   });
 
   stream.on("end", () => {
-    tokens !== 0 && updateTokens();
+    // tokens !== 0 && updateTokens();
     ws.send("[DONE]");
     ws.close();
   });
