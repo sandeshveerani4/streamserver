@@ -8,8 +8,10 @@ import { requireTokenWs } from "./middleware";
 import "dotenv/config";
 import OpenAI from "openai";
 import ocr from "./routes/ocr";
+import revenuecat from "./routes/revenuecat";
 import fileUpload from "express-fileupload";
-
+/* import { initializeFirebaseApp, backups } from "firestore-export-import";
+import fs from "fs"; */
 const openai = new OpenAI({
   apiKey: process.env["PAID_API"],
 });
@@ -29,10 +31,26 @@ app.use(express.json());
 app.use(fileUpload({ useTempFiles: false }));
 
 app.get("/", (req, res) => {
+  /* backups(firestore).then((collections: any) => {
+    const final = [];
+    for (const key in collections.users) {
+      final.push({ uid: key, ...collections });
+    }
+    fs.writeFile("users.json", JSON.stringify({ users: final }), (e) => {
+      console.log(e);
+    });
+  }); */
   return res.json({ sucess: true });
 });
 app.use("/ocr", ocr);
-
+app.use("/revenuecat", revenuecat);
+/* const firestore = initializeFirebaseApp({
+  credential: admin.credential.cert({
+    projectId: "textaify-5d7b6",
+    privateKey: process.env["FIREBASE_PRIVATE_KEY"],
+    clientEmail: process.env["FIREBASE_CLIENT_EMAIL"],
+  }),
+}); */
 const server = createServer(app);
 const wss = new WebSocketServer({ noServer: true });
 server.on("upgrade", async (req, socket, head) => {
