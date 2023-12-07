@@ -22,8 +22,9 @@ export const requireAuth = async (
 };
 
 export const requireTokenWs = async (req: IncomingMessage) => {
-  const uid = req.headers["x-firebase-uid"];
-  const userToken = req.headers["x-firebase-token"];
+  const uid = req.headers["x-firebase-uid"] ?? req.headers["X-Firebase-UID"];
+  const userToken =
+    req.headers["x-firebase-token"] ?? req.headers["X-Firebase-Token"];
   if (!uid || !userToken) {
     return false;
   }

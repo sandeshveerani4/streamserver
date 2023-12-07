@@ -55,10 +55,7 @@ const server = createServer(app);
 const wss = new WebSocketServer({ noServer: true });
 server.on("upgrade", async (req, socket, head) => {
   const verfied = await requireTokenWs(req);
-  if (
-    !verfied &&
-    !(req.headers["test_mode"] && req.headers["test_mode"] === "1692157405020")
-  ) {
+  if (!verfied) {
     console.log("got there");
     socket.end();
     return;
@@ -70,7 +67,8 @@ server.on("upgrade", async (req, socket, head) => {
 
 wss.on("connection", async (ws, req) => {
   ws.send("Connection successful!");
-  const uid = req.headers["x-firebase-uid"] as string;
+  const uid = (req.headers["x-firebase-uid"] ??
+    req.headers["X-Firebase-UID"]) as string;
   ws.on("message", async (data) => await onMsg(ws, data, uid, openai));
 });
 
