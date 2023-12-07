@@ -35,9 +35,10 @@ export async function onMsg(
   uid: string,
   openai: OpenAI
 ) {
-  const body: OpenAI.Chat.ChatCompletionCreateParamsStreaming = JSON.parse(
+  let { modeDetail, sentiment, ...fBody } = JSON.parse(
     message as unknown as string
   );
+  const body: OpenAI.Chat.ChatCompletionCreateParamsStreaming = fBody;
   const document = admin.firestore().collection("users").doc(uid);
   const dbResults = await document.get();
   let finalData = dbResults.data();
