@@ -29,7 +29,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "../public")));
 app.use(
   fileUpload({
     useTempFiles: true,
@@ -52,7 +52,7 @@ app.get("/", (req, res) => {
 app.use("/ocr", ocr);
 app.use("/revenuecat", revenuecat);
 app.use("/privacy_policy.txt", (_, res) => {
-  res.sendFile(path.join(__dirname, "./privacy_policy.txt"));
+  res.sendFile(path.join(__dirname, "../privacy_policy.txt"));
 });
 /* const firestore = initializeFirebaseApp({
   credential: admin.credential.cert({
