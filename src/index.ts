@@ -4,7 +4,7 @@ import { WebSocketServer } from "ws";
 import admin from "firebase-admin";
 import { createServer } from "http";
 import { onMsg } from "./ws_handler";
-import { requireTokenWs } from "./middleware";
+import { requireAuth, requireTokenWs } from "./middleware";
 import "dotenv/config";
 import OpenAI from "openai";
 import ocr from "./routes/ocr";
@@ -29,7 +29,10 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use("/public", express.static(path.join(__dirname, "../public")));
+app.use("/images", requireAuth, (req) => {
+  if (req.uid)
+    return express.static(path.join(__dirname, `../public/${req.uid}`));
+});
 app.use(
   fileUpload({
     useTempFiles: true,
@@ -49,7 +52,7 @@ app.get("/", (req, res) => {
   }); */
   return res.json({ sucess: true });
 });
-app.use("/ocr", ocr);
+app.use("/ocr", requireAuth, ocr);
 app.use("/revenuecat", revenuecat);
 app.use("/privacy_policy.txt", (_, res) => {
   res.sendFile(path.join(__dirname, "../privacy_policy.txt"));
