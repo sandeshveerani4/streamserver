@@ -31,7 +31,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/images", requireAuth, (req) => {
   if (req.uid)
-    return express.static(path.join(__dirname, `../public/${req.uid}`));
+    return express.static(path.join(__dirname, `../images/${req.uid}`));
 });
 app.use(
   fileUpload({
