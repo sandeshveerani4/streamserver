@@ -30,7 +30,7 @@ router.post("/", async (req, res) => {
     if (err) {
       return res.status(500).json({ error: err });
     }
-    return res.json({ file_name: uploadPath });
+    return res.json({ file_name: file.name });
   });
 });
 
