@@ -17,6 +17,7 @@ export const requireAuth = async (
     res.status(401).json({ error: "unauthorized" });
     return false;
   }
+  req.uid = uid;
   next();
   return true;
 };
