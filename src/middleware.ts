@@ -6,6 +6,7 @@ export const requireAuth = async (
   res: Response,
   next: NextFunction
 ) => {
+  console.log(req.headers);
   const uid = req.headers["x-firebase-uid"];
   const userToken = req.headers["x-firebase-token"];
   if (!uid || !userToken) {
