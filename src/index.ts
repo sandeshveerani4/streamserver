@@ -10,6 +10,7 @@ import OpenAI from "openai";
 import ocr from "./routes/ocr";
 import revenuecat from "./routes/revenuecat";
 import fileUpload from "express-fileupload";
+import path from "path/posix";
 /* import { initializeFirebaseApp, backups } from "firestore-export-import";
 import fs from "fs"; */
 const openai = new OpenAI({
@@ -28,7 +29,13 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(fileUpload({ useTempFiles: false }));
+app.use(express.static("public"));
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: "/tmp/",
+  })
+);
 
 app.get("/", (req, res) => {
   /* backups(firestore).then((collections: any) => {
@@ -44,6 +51,9 @@ app.get("/", (req, res) => {
 });
 app.use("/ocr", ocr);
 app.use("/revenuecat", revenuecat);
+app.use("/privacy_policy.txt", (_, res) => {
+  res.sendFile(path.join(__dirname, "./privacy_policy.txt"));
+});
 /* const firestore = initializeFirebaseApp({
   credential: admin.credential.cert({
     projectId: "textaify-5d7b6",

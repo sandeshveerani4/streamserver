@@ -34,8 +34,7 @@
     "firebase-admin": "^11.11.0",
     "firestore-export-import": "^1.4.0",
     "gpt-3-encoder": "^1.1.4",
-    "openai": "^4.16.1",
-    "react-native-vision-camera": "^3.6.4",
+    "openai": "^4.24.7",
     "tesseract.js": "^5.0.3",
     "ws": "^8.14.2"
   }
