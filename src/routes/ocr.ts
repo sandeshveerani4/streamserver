@@ -24,7 +24,7 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ error: "invalid_file_count" });
   }
   let file = req.files["image"] as UploadedFile;
-  const uploadPath = path.resolve(__dirname, "../public/images/", file.name);
+  const uploadPath = path.resolve(__dirname, "../../public/images/", file.name);
 
   file.mv(uploadPath, (err) => {
     if (err) {
