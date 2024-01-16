@@ -29,11 +29,10 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use("/images/:uid/:file", requireAuth, (req, res, next) => {
-  if (req.uid)
-    express.static(
-      path.join(__dirname, `../images/${req.uid}/${req.params.file}`)
-    )(req, res, next);
+app.use("/images/:uid/:file", (req, res, next) => {
+  express.static(
+    path.join(__dirname, `../images/${req.params.uid}/${req.params.file}`)
+  )(req, res, next);
 });
 app.use(
   fileUpload({
